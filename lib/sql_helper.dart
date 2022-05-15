@@ -83,4 +83,29 @@ class SQLHelper {
       debugPrint("Something went wrong when deleting an item: $err");
     }
   }
+
+  static satisYap(String barkod, int adet) async {
+    final db = await SQLHelper.db();
+    int? asilStok;
+    var result;
+
+    // ignore: unused_local_variable
+    var sorgu = await db
+        .query('items', where: "barkod = ?", whereArgs: [barkod]).then((value) {
+      // ignore: avoid_print
+      asilStok = int.parse(value[0].entries.elementAt(3).value.toString());
+      // ignore: avoid_print
+      print(asilStok);
+    });
+
+    final data = {
+      'stok': asilStok! - adet,
+      'barkod': barkod,
+      'createdAt': DateTime.now().toString()
+    };
+
+    result = db.update('items', data, where: "barkod = ?", whereArgs: [barkod]);
+
+    return result;
+  }
 }

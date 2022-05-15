@@ -55,6 +55,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _stokController = TextEditingController();
   final TextEditingController _barkodController = TextEditingController();
+  final TextEditingController _adetController = TextEditingController();
 
   // This function will be triggered when the floating button is pressed
   // It will also be triggered when you want to update an item
@@ -141,6 +142,47 @@ class _HomePageState extends State<HomePage> {
             ));
   }
 
+  void _showSatis() async {
+    showModalBottomSheet(
+        context: context,
+        elevation: 5,
+        isScrollControlled: true,
+        builder: (_) => Container(
+              padding: EdgeInsets.only(
+                top: 15,
+                left: 15,
+                right: 15,
+                // this will prevent the soft keyboard from covering the text fields
+                bottom: MediaQuery.of(context).viewInsets.bottom + 120,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  TextField(
+                    controller: _barkodController,
+                    decoration: const InputDecoration(hintText: 'Barkod'),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextField(
+                      controller: _adetController,
+                      decoration:
+                          const InputDecoration(hintText: 'Satış Adeti'),
+                      keyboardType: TextInputType.number),
+                  ElevatedButton(
+                    onPressed: () async {
+                      _urunSat(_barkodController.text,
+                          int.parse(_adetController.text));
+                    },
+                    child: const Text('Satış Yap'),
+                  )
+                ],
+              ),
+            ));
+  }
+
 // Insert a new journal to the database
   Future<void> _addItem() async {
     await SQLHelper.createItem(
@@ -160,6 +202,12 @@ class _HomePageState extends State<HomePage> {
         int.parse(_stokController.text),
         _barkodController.text);
     _refreshJournals();
+  }
+
+  Future<void> _urunSat(String barkod, int adet) async {
+    await SQLHelper.satisYap(barkod, adet);
+    _refreshJournals();
+    setState(() {});
   }
 
   // Delete an item
@@ -213,27 +261,25 @@ class _HomePageState extends State<HomePage> {
                               style: const TextStyle(color: Colors.black)),
                         ],
                       ),
-                      Container(
-                        child: SizedBox(
-                          width: 100,
-                          child: Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.black,
-                                ),
-                                onPressed: () =>
-                                    _showForm(_journals[index]['id']),
+                      SizedBox(
+                        width: 100,
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit,
+                                color: Colors.black,
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete,
-                                    color: Colors.black),
-                                onPressed: () =>
-                                    _deleteItem(_journals[index]['id']),
-                              ),
-                            ],
-                          ),
+                              onPressed: () =>
+                                  _showForm(_journals[index]['id']),
+                            ),
+                            IconButton(
+                              icon:
+                                  const Icon(Icons.delete, color: Colors.black),
+                              onPressed: () =>
+                                  _deleteItem(_journals[index]['id']),
+                            ),
+                          ],
                         ),
                       )
                     ],
@@ -249,8 +295,7 @@ class _HomePageState extends State<HomePage> {
             left: 30,
             bottom: 20,
             child: FloatingActionButton(
-              heroTag: 'back',
-              onPressed: () {/* Do something */},
+              onPressed: () => _showSatis(),
               // ignore: sort_child_properties_last
               child: const Icon(
                 Icons.shopping_bag_outlined,
@@ -265,7 +310,6 @@ class _HomePageState extends State<HomePage> {
             bottom: 20,
             right: 30,
             child: FloatingActionButton(
-              heroTag: 'next',
               onPressed: () => _showForm(null),
               // ignore: sort_child_properties_last
               child: const Icon(
