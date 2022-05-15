@@ -1,5 +1,8 @@
 // main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_stok/delay_effect.dart';
+import 'package:flutter_stok/splash.dart';
+import 'package:flutter_stok/theme.dart';
 
 import 'sql_helper.dart';
 
@@ -13,13 +16,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        // Remove the debug banner
-        debugShowCheckedModeBanner: false,
-        title: 'Kindacode.com',
-        theme: ThemeData(
-          primarySwatch: Colors.purple,
-        ),
-        home: const HomePage());
+      // Remove the debug banner
+      debugShowCheckedModeBanner: false,
+      title: 'Stok App',
+      theme: MyTheme.myTheme,
+      home: const SplashScreen(),
+    );
   }
 }
 
@@ -223,9 +225,19 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Stok Takip App'),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const DelayedDisplay(
+          delay: Duration(milliseconds: 100),
+          child: Text(
+            'Stok Takip App',
+            style: TextStyle(
+                fontFamily: "Varela", color: Colors.black, fontSize: 26.0),
+          ),
+        ),
       ),
       body: _isLoading
           ? const Center(
@@ -233,97 +245,147 @@ class _HomePageState extends State<HomePage> {
             )
           : ListView.builder(
               itemCount: _journals.length,
-              itemBuilder: (context, index) => Card(
-                margin: const EdgeInsets.all(15),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(_journals[index]['barkod'],
-                              style: const TextStyle(color: Colors.black)),
-                          Text(
-                              _journals[index]['title'] +
-                                  ": " +
-                                  _journals[index]['description'],
-                              style: const TextStyle(color: Colors.black)),
-
-                          // ignore: prefer_interpolation_to_compose_strings
-                          Text(
-                              // ignore: prefer_interpolation_to_compose_strings
-                              "Stok Sayısı: " +
-                                  _journals[index]['stok'].toString(),
-                              style: const TextStyle(color: Colors.black)),
-                        ],
-                      ),
-                      SizedBox(
-                        width: 100,
-                        child: Row(
+              itemBuilder: (context, index) => DelayedDisplay(
+                delay: Duration(milliseconds: 700),
+                child: Container(
+                  height: deviceHeight(context) * 0.18,
+                  decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black12, width: 2),
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(8.0)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color.fromARGB(255, 205, 205, 205),
+                          offset: Offset(0.0, 0.0), //(x,y)
+                          blurRadius: 32.5,
+                        )
+                      ],
+                      color: Colors.white),
+                  margin: const EdgeInsets.all(15),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit,
-                                color: Colors.black,
-                              ),
-                              onPressed: () =>
-                                  _showForm(_journals[index]['id']),
+                            // ignore: prefer_interpolation_to_compose_strings
+
+                            Row(
+                              children: [
+                                Text(_journals[index]['title'] + ": ",
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                                Text(_journals[index]['description'],
+                                    style: const TextStyle(
+                                        fontFamily: "Varela",
+                                        color: Colors.black)),
+                              ],
                             ),
-                            IconButton(
-                              icon:
-                                  const Icon(Icons.delete, color: Colors.black),
-                              onPressed: () =>
-                                  _deleteItem(_journals[index]['id']),
+
+                            // ignore: prefer_interpolation_to_compose_strings
+                            Row(
+                              children: [
+                                const Text("Barkod: ",
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                                Text(_journals[index]['barkod'],
+                                    style: const TextStyle(
+                                        fontFamily: "Varela",
+                                        color: Colors.black)),
+                              ],
+                            ),
+
+                            // ignore: prefer_interpolation_to_compose_strings
+                            Row(
+                              children: [
+                                const Text(
+                                    // ignore: prefer_interpolation_to_compose_strings
+                                    "Stok Sayısı: ",
+                                    style: TextStyle(
+                                        fontFamily: "Varela",
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold)),
+                                Text(
+                                    // ignore: prefer_interpolation_to_compose_strings
+
+                                    _journals[index]['stok'].toString(),
+                                    style:
+                                        const TextStyle(color: Colors.black)),
+                              ],
                             ),
                           ],
                         ),
-                      )
-                    ],
+                        // ignore: avoid_unnecessary_containers
+                        Container(
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.black54,
+                                ),
+                                onPressed: () =>
+                                    _showForm(_journals[index]['id']),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.black54,
+                                ),
+                                onPressed: () =>
+                                    _deleteItem(_journals[index]['id']),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            left: 30,
-            bottom: 20,
-            child: FloatingActionButton(
-              onPressed: () => _showSatis(),
-              // ignore: sort_child_properties_last
-              child: const Icon(
-                Icons.shopping_bag_outlined,
-                size: 40,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 20,
-            right: 30,
-            child: FloatingActionButton(
-              onPressed: () => _showForm(null),
-              // ignore: sort_child_properties_last
-              child: const Icon(
-                Icons.add,
-                size: 40,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+      floatingActionButton: DelayedDisplay(
+        delay: const Duration(milliseconds: 400),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned(
+              right: 30,
+              bottom: 20,
+              child: FloatingActionButton(
+                backgroundColor: Colors.blue,
+                onPressed: () => _showSatis(),
+                // ignore: sort_child_properties_last
+                child: const Icon(
+                  Icons.shopping_bag_outlined,
+                  size: 32,
+                ),
               ),
             ),
-          ),
-          // Add more floating buttons if you want
-          // There is no limit
-        ],
+            Positioned(
+              bottom: 100,
+              right: 30,
+              child: FloatingActionButton(
+                backgroundColor: Colors.red,
+                onPressed: () => _showForm(null),
+                // ignore: sort_child_properties_last
+                child: const Icon(
+                  Icons.add,
+                  size: 32,
+                ),
+              ),
+            ),
+            // Add more floating buttons if you want
+            // There is no limit
+          ],
+        ),
       ),
     );
   }

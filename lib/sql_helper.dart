@@ -87,6 +87,7 @@ class SQLHelper {
   static satisYap(String barkod, int adet) async {
     final db = await SQLHelper.db();
     int? asilStok;
+    // ignore: prefer_typing_uninitialized_variables
     var result;
 
     // ignore: unused_local_variable
