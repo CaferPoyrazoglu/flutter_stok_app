@@ -8,6 +8,7 @@ class SQLHelper {
         title TEXT,
         description TEXT,
         stok INTEGER,
+        barkod TEXT,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
       """);
@@ -18,7 +19,7 @@ class SQLHelper {
 
   static Future<sql.Database> db() async {
     return sql.openDatabase(
-      'stok.db',
+      'stokapp.db',
       version: 1,
       onCreate: (sql.Database database, int version) async {
         await createTables(database);
@@ -28,10 +29,15 @@ class SQLHelper {
 
   // Create new item (journal)
   static Future<int> createItem(
-      String title, String? descrption, String? stok) async {
+      String title, String? descrption, String? stok, String? barkod) async {
     final db = await SQLHelper.db();
 
-    final data = {'title': title, 'description': descrption, 'stok': stok};
+    final data = {
+      'title': title,
+      'description': descrption,
+      'stok': stok,
+      'barkod': barkod
+    };
     final id = await db.insert('items', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
     return id;
@@ -51,14 +57,15 @@ class SQLHelper {
   }
 
   // Update an item by id
-  static Future<int> updateItem(
-      int id, String title, String? descrption, int? stok) async {
+  static Future<int> updateItem(int id, String title, String? descrption,
+      int? stok, String? barkod) async {
     final db = await SQLHelper.db();
 
     final data = {
       'title': title,
       'description': descrption,
       'stok': stok,
+      'barkod': barkod,
       'createdAt': DateTime.now().toString()
     };
 

@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Kindacode.com',
         theme: ThemeData(
-          primarySwatch: Colors.red,
+          primarySwatch: Colors.purple,
         ),
         home: const HomePage());
   }
@@ -54,6 +54,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _stokController = TextEditingController();
+  final TextEditingController _barkodController = TextEditingController();
 
   // This function will be triggered when the floating button is pressed
   // It will also be triggered when you want to update an item
@@ -99,6 +100,13 @@ class _HomePageState extends State<HomePage> {
                     height: 10,
                   ),
                   TextField(
+                    controller: _barkodController,
+                    decoration: const InputDecoration(hintText: 'Barkod'),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextField(
                     controller: _stokController,
                     decoration: const InputDecoration(
                       hintText: 'Stok Adeti',
@@ -120,6 +128,7 @@ class _HomePageState extends State<HomePage> {
                       _titleController.text = '';
                       _descriptionController.text = '';
                       _stokController.text = '';
+                      _barkodController.text = '';
 
                       // Close the bottom sheet
                       // ignore: use_build_context_synchronously
@@ -134,15 +143,22 @@ class _HomePageState extends State<HomePage> {
 
 // Insert a new journal to the database
   Future<void> _addItem() async {
-    await SQLHelper.createItem(_titleController.text,
-        _descriptionController.text, _stokController.text);
+    await SQLHelper.createItem(
+        _titleController.text,
+        _descriptionController.text,
+        _stokController.text,
+        _barkodController.text);
     _refreshJournals();
   }
 
   // Update an existing journal
   Future<void> _updateItem(int id) async {
-    await SQLHelper.updateItem(id, _titleController.text,
-        _descriptionController.text, int.parse(_stokController.text));
+    await SQLHelper.updateItem(
+        id,
+        _titleController.text,
+        _descriptionController.text,
+        int.parse(_stokController.text),
+        _barkodController.text);
     _refreshJournals();
   }
 
@@ -159,6 +175,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.purple[100],
       appBar: AppBar(
         title: const Text('Stok Takip App'),
       ),
@@ -169,38 +186,59 @@ class _HomePageState extends State<HomePage> {
           : ListView.builder(
               itemCount: _journals.length,
               itemBuilder: (context, index) => Card(
-                color: Colors.red,
                 margin: const EdgeInsets.all(15),
-                child: ListTile(
-                    title: Text(
-                        _journals[index]['title'] +
-                            ": " +
-                            _journals[index]['description'],
-                        style: const TextStyle(color: Colors.white)),
-                    // ignore: prefer_interpolation_to_compose_strings
-                    subtitle: Text(
-                        // ignore: prefer_interpolation_to_compose_strings
-                        "Stok Sayısı: " + _journals[index]['stok'].toString(),
-                        style: const TextStyle(color: Colors.white)),
-                    trailing: SizedBox(
-                      width: 100,
-                      child: Row(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                            ),
-                            onPressed: () => _showForm(_journals[index]['id']),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.white),
-                            onPressed: () =>
-                                _deleteItem(_journals[index]['id']),
-                          ),
+                          Text(_journals[index]['barkod'],
+                              style: const TextStyle(color: Colors.black)),
+                          Text(
+                              _journals[index]['title'] +
+                                  ": " +
+                                  _journals[index]['description'],
+                              style: const TextStyle(color: Colors.black)),
+
+                          // ignore: prefer_interpolation_to_compose_strings
+                          Text(
+                              // ignore: prefer_interpolation_to_compose_strings
+                              "Stok Sayısı: " +
+                                  _journals[index]['stok'].toString(),
+                              style: const TextStyle(color: Colors.black)),
                         ],
                       ),
-                    )),
+                      Container(
+                        child: SizedBox(
+                          width: 100,
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.black,
+                                ),
+                                onPressed: () =>
+                                    _showForm(_journals[index]['id']),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete,
+                                    color: Colors.black),
+                                onPressed: () =>
+                                    _deleteItem(_journals[index]['id']),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
               ),
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
