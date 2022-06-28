@@ -4,4 +4,5 @@ class ApiConstants {
   static String deleteEndpoint = '/urun-sil';
   static String addEndpoint = "/urun-ekle";
   static String satEndPoint = "/urun-satis";
+  static String updateUrunEndpoint = "/urun-update";
 }

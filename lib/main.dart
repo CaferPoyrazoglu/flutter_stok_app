@@ -4,9 +4,7 @@ import 'package:flutter_stok/delay_effect.dart';
 import 'package:flutter_stok/splash.dart';
 import 'package:flutter_stok/theme.dart';
 import 'package:flutter_stok/urun_model.dart';
-
 import 'api_service.dart';
-import 'sql_helper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,22 +29,10 @@ class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  // All journals
-  List<Map<String, dynamic>> _journals = [];
-
-  // This function is used to fetch all data from the database
-  void _refreshJournals() async {
-    final data = await SQLHelper.getItems();
-    setState(() {
-      _journals = data;
-    });
-  }
-
   void _getData() async {
     _urunModel = (await ApiService().getUrunler())!;
     Future.delayed(const Duration(seconds: 1)).then((value) => setState(() {}));
@@ -57,7 +43,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _getData();
-    _refreshJournals(); // Loading the diary when the app starts
   }
 
   final TextEditingController _titleController = TextEditingController();
@@ -66,17 +51,13 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _barkodController = TextEditingController();
   final TextEditingController _adetController = TextEditingController();
 
-  // This function will be triggered when the floating button is pressed
-  // It will also be triggered when you want to update an item
-  void _showForm(int? id) async {
-    if (id != null) {
-      // id == null -> create new item
-      // id != null -> update an existing item
-      final existingJournal =
-          _journals.firstWhere((element) => element['id'] == id);
-      _titleController.text = existingJournal['title'];
-      _descriptionController.text = existingJournal['description'];
-      _stokController.text = existingJournal['stok'].toString();
+  void _showForm(bool check,
+      [marka, String? urunAd, String? barkod, String? stok]) async {
+    if (check) {
+      _titleController.text = marka;
+      _descriptionController.text = urunAd!;
+      _barkodController.text = barkod!;
+      _stokController.text = stok.toString();
     }
 
     showModalBottomSheet(
@@ -88,7 +69,6 @@ class _HomePageState extends State<HomePage> {
                 top: 15,
                 left: 15,
                 right: 15,
-                // this will prevent the soft keyboard from covering the text fields
                 bottom: MediaQuery.of(context).viewInsets.bottom + 120,
               ),
               child: Column(
@@ -109,10 +89,11 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(
                     height: 10,
                   ),
-                  TextField(
-                    controller: _barkodController,
-                    decoration: const InputDecoration(hintText: 'Barkod'),
-                  ),
+                  if (!check)
+                    TextField(
+                      controller: _barkodController,
+                      decoration: const InputDecoration(hintText: 'Barkod'),
+                    ),
                   const SizedBox(
                     height: 10,
                   ),
@@ -126,7 +107,7 @@ class _HomePageState extends State<HomePage> {
                   ElevatedButton(
                     onPressed: () async {
                       // Save new journal
-                      if (id == null) {
+                      if (!check) {
                         await addUrun(
                             _titleController.text,
                             _descriptionController.text,
@@ -134,21 +115,17 @@ class _HomePageState extends State<HomePage> {
                             _stokController.text);
                       }
 
-                      if (id != null) {
-                        await _updateItem(id);
+                      if (check) {
+                        await editUrun(
+                            _titleController.text,
+                            _descriptionController.text,
+                            _barkodController.text,
+                            _stokController.text);
                       }
 
-                      // Clear the text fields
-                      _titleController.text = '';
-                      _descriptionController.text = '';
-                      _stokController.text = '';
-                      _barkodController.text = '';
-
-                      // Close the bottom sheet
-                      // ignore: use_build_context_synchronously
                       Navigator.of(context).pop();
                     },
-                    child: Text(id == null ? 'Ürünü Ekle' : 'Update'),
+                    child: Text(!check ? 'Ürünü Ekle' : 'Update'),
                   )
                 ],
               ),
@@ -167,7 +144,6 @@ class _HomePageState extends State<HomePage> {
                 top: 15,
                 left: 15,
                 right: 15,
-                // this will prevent the soft keyboard from covering the text fields
                 bottom: MediaQuery.of(context).viewInsets.bottom + 120,
               ),
               child: Column(
@@ -195,8 +171,6 @@ class _HomePageState extends State<HomePage> {
                       _stokController.text = '';
                       _barkodController.text = '';
 
-                      // Close the bottom sheet
-                      // ignore: use_build_context_synchronously
                       Navigator.of(context).pop();
                     },
                     child: const Text('Satış Yap'),
@@ -204,23 +178,6 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ));
-  }
-
-  // Update an existing journal
-  Future<void> _updateItem(int id) async {
-    await SQLHelper.updateItem(
-        id,
-        _titleController.text,
-        _descriptionController.text,
-        int.parse(_stokController.text),
-        _barkodController.text);
-    _refreshJournals();
-  }
-
-  Future<void> _urunSat(String barkod, int adet) async {
-    await SQLHelper.satisYap(barkod, adet);
-    _refreshJournals();
-    setState(() {});
   }
 
   @override
@@ -273,8 +230,6 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // ignore: prefer_interpolation_to_compose_strings
-                            // Text(_userModel![index].id.toString()),
                             Row(
                               children: [
                                 Text(_urunModel![0].urunler[index].marka + ": ",
@@ -287,8 +242,6 @@ class _HomePageState extends State<HomePage> {
                                         color: Colors.black)),
                               ],
                             ),
-
-                            // ignore: prefer_interpolation_to_compose_strings
                             Row(
                               children: [
                                 const Text("Barkod: ",
@@ -301,20 +254,14 @@ class _HomePageState extends State<HomePage> {
                                         color: Colors.black)),
                               ],
                             ),
-
-                            // ignore: prefer_interpolation_to_compose_strings
                             Row(
                               children: [
-                                const Text(
-                                    // ignore: prefer_interpolation_to_compose_strings
-                                    "Stok Sayısı: ",
+                                const Text("Stok Sayısı: ",
                                     style: TextStyle(
                                         fontFamily: "Varela",
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold)),
                                 Text(
-                                    // ignore: prefer_interpolation_to_compose_strings
-
                                     _urunModel![0]
                                         .urunler[index]
                                         .stok
@@ -325,7 +272,6 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ],
                         ),
-                        // ignore: avoid_unnecessary_containers
                         Container(
                           child: Row(
                             children: [
@@ -343,8 +289,15 @@ class _HomePageState extends State<HomePage> {
                                   Icons.edit,
                                   color: Colors.black54,
                                 ),
-                                onPressed: () =>
-                                    _showForm(_journals[index]['id']),
+                                onPressed: () => _showForm(
+                                    true,
+                                    _urunModel![0].urunler[index].marka,
+                                    _urunModel![0].urunler[index].urunAd,
+                                    _urunModel![0].urunler[index].barkod,
+                                    _urunModel![0]
+                                        .urunler[index]
+                                        .stok
+                                        .toString()),
                               ),
                               IconButton(
                                 icon: const Icon(
@@ -368,8 +321,7 @@ class _HomePageState extends State<HomePage> {
         delay: const Duration(milliseconds: 400),
         child: FloatingActionButton(
           backgroundColor: Colors.red,
-          onPressed: () => _showForm(null),
-          // ignore: sort_child_properties_last
+          onPressed: () => _showForm(false),
           child: const Icon(
             Icons.add,
             size: 32,
@@ -398,6 +350,14 @@ class _HomePageState extends State<HomePage> {
   Future satUrun(barkod, satis, int stok) async {
     print(barkod + satis.toString() + stok.toString());
     await ApiService().sellUrun(barkod, satis, stok);
+    _urunModel = (await ApiService().getUrunler())!;
+    setState(() {
+      _urunModel = _urunModel;
+    });
+  }
+
+  Future editUrun(marka, urunAd, barkod, stok) async {
+    await ApiService().updateUrun(marka, urunAd, barkod, stok);
     _urunModel = (await ApiService().getUrunler())!;
     setState(() {
       _urunModel = _urunModel;

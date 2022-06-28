@@ -64,4 +64,20 @@ class ApiService {
     );
     return null;
   }
+
+  Future<List<UrunModel>?> updateUrun(marka, urunAd, barkod, stok) async {
+    http.post(
+      Uri.parse(ApiConstants.baseUrl + ApiConstants.updateUrunEndpoint),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'marka': marka,
+        'urunAd': urunAd,
+        'barkod': barkod,
+        'stok': stok
+      }),
+    );
+    return null;
+  }
 }
