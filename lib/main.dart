@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stok/delay_effect.dart';
 import 'package:flutter_stok/splash.dart';
 import 'package:flutter_stok/theme.dart';
+import 'package:flutter_stok/urun_model.dart';
 
+import 'api_service.dart';
 import 'sql_helper.dart';
 
 void main() {
@@ -37,19 +39,24 @@ class _HomePageState extends State<HomePage> {
   // All journals
   List<Map<String, dynamic>> _journals = [];
 
-  bool _isLoading = true;
   // This function is used to fetch all data from the database
   void _refreshJournals() async {
     final data = await SQLHelper.getItems();
     setState(() {
       _journals = data;
-      _isLoading = false;
     });
   }
 
+  void _getData() async {
+    _urunModel = (await ApiService().getUrunler())!;
+    Future.delayed(const Duration(seconds: 1)).then((value) => setState(() {}));
+  }
+
+  late List<UrunModel>? _urunModel = [];
   @override
   void initState() {
     super.initState();
+    _getData();
     _refreshJournals(); // Loading the diary when the app starts
   }
 
@@ -212,16 +219,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  // Delete an item
-  void _deleteItem(int id) async {
-    await SQLHelper.deleteItem(id);
-    // ignore: use_build_context_synchronously
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Successfully deleted a journal!'),
-    ));
-    _refreshJournals();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -239,12 +236,12 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      body: _isLoading
+      body: _urunModel == null || _urunModel!.isEmpty
           ? const Center(
               child: CircularProgressIndicator(),
             )
           : ListView.builder(
-              itemCount: _journals.length,
+              itemCount: _urunModel![0].urunler.length,
               itemBuilder: (context, index) => DelayedDisplay(
                 delay: Duration(milliseconds: 700),
                 child: Container(
@@ -273,14 +270,14 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             // ignore: prefer_interpolation_to_compose_strings
-
+                            // Text(_userModel![index].id.toString()),
                             Row(
                               children: [
-                                Text(_journals[index]['title'] + ": ",
+                                Text(_urunModel![0].urunler[index].marka + ": ",
                                     style: const TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold)),
-                                Text(_journals[index]['description'],
+                                Text(_urunModel![0].urunler[index].urunAd,
                                     style: const TextStyle(
                                         fontFamily: "Varela",
                                         color: Colors.black)),
@@ -294,7 +291,7 @@ class _HomePageState extends State<HomePage> {
                                     style: TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold)),
-                                Text(_journals[index]['barkod'],
+                                Text(_urunModel![0].urunler[index].barkod,
                                     style: const TextStyle(
                                         fontFamily: "Varela",
                                         color: Colors.black)),
@@ -314,7 +311,10 @@ class _HomePageState extends State<HomePage> {
                                 Text(
                                     // ignore: prefer_interpolation_to_compose_strings
 
-                                    _journals[index]['stok'].toString(),
+                                    _urunModel![0]
+                                        .urunler[index]
+                                        .stok
+                                        .toString(),
                                     style:
                                         const TextStyle(color: Colors.black)),
                               ],
@@ -338,8 +338,9 @@ class _HomePageState extends State<HomePage> {
                                   Icons.delete,
                                   color: Colors.black54,
                                 ),
-                                onPressed: () =>
-                                    _deleteItem(_journals[index]['id']),
+                                onPressed: () async {
+                                  getData(_urunModel![0].urunler[index].barkod);
+                                },
                               ),
                             ],
                           ),
@@ -388,5 +389,13 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  Future getData(urunNo) async {
+    await ApiService().deleteUrun(urunNo);
+    _urunModel = (await ApiService().getUrunler())!;
+    setState(() {
+      _urunModel = _urunModel;
+    });
   }
 }
