@@ -32,4 +32,36 @@ class ApiService {
     );
     return null;
   }
+
+  Future<List<UrunModel>?> addUrun(marka, urunAd, barkod, stok) async {
+    print(marka + urunAd + barkod + stok);
+    http.post(
+      Uri.parse(ApiConstants.baseUrl + ApiConstants.addEndpoint),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'marka': marka,
+        'urunAd': urunAd,
+        'barkod': barkod,
+        'stok': stok,
+      }),
+    );
+    return null;
+  }
+
+  Future<List<UrunModel>?> sellUrun(barkod, satis, int stok) async {
+    http.post(
+      Uri.parse(ApiConstants.baseUrl + ApiConstants.satEndPoint),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'barkod': barkod,
+        'satis': satis.toString(),
+        'stok': stok.toString()
+      }),
+    );
+    return null;
+  }
 }

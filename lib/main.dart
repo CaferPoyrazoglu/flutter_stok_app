@@ -127,7 +127,11 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () async {
                       // Save new journal
                       if (id == null) {
-                        await _addItem();
+                        await addUrun(
+                            _titleController.text,
+                            _descriptionController.text,
+                            _barkodController.text,
+                            _stokController.text);
                       }
 
                       if (id != null) {
@@ -151,7 +155,9 @@ class _HomePageState extends State<HomePage> {
             ));
   }
 
-  void _showSatis() async {
+  void _showSatis(int stok, String barkod) async {
+    _barkodController.text = barkod;
+
     showModalBottomSheet(
         context: context,
         elevation: 5,
@@ -182,24 +188,22 @@ class _HomePageState extends State<HomePage> {
                       keyboardType: TextInputType.number),
                   ElevatedButton(
                     onPressed: () async {
-                      _urunSat(_barkodController.text,
-                          int.parse(_adetController.text));
+                      satUrun(_barkodController.text,
+                          int.parse(_adetController.text), stok);
+                      _titleController.text = '';
+                      _descriptionController.text = '';
+                      _stokController.text = '';
+                      _barkodController.text = '';
+
+                      // Close the bottom sheet
+                      // ignore: use_build_context_synchronously
+                      Navigator.of(context).pop();
                     },
                     child: const Text('Satış Yap'),
                   )
                 ],
               ),
             ));
-  }
-
-// Insert a new journal to the database
-  Future<void> _addItem() async {
-    await SQLHelper.createItem(
-        _titleController.text,
-        _descriptionController.text,
-        _stokController.text,
-        _barkodController.text);
-    _refreshJournals();
   }
 
   // Update an existing journal
@@ -327,6 +331,15 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               IconButton(
                                 icon: const Icon(
+                                  Icons.money,
+                                  color: Colors.black54,
+                                ),
+                                onPressed: () => _showSatis(
+                                    _urunModel![0].urunler[index].stok,
+                                    _urunModel![0].urunler[index].barkod),
+                              ),
+                              IconButton(
+                                icon: const Icon(
                                   Icons.edit,
                                   color: Colors.black54,
                                 ),
@@ -351,41 +364,16 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: DelayedDisplay(
         delay: const Duration(milliseconds: 400),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned(
-              right: 30,
-              bottom: 20,
-              child: FloatingActionButton(
-                backgroundColor: Colors.blue,
-                onPressed: () => _showSatis(),
-                // ignore: sort_child_properties_last
-                child: const Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 32,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 100,
-              right: 30,
-              child: FloatingActionButton(
-                backgroundColor: Colors.red,
-                onPressed: () => _showForm(null),
-                // ignore: sort_child_properties_last
-                child: const Icon(
-                  Icons.add,
-                  size: 32,
-                ),
-              ),
-            ),
-            // Add more floating buttons if you want
-            // There is no limit
-          ],
+        child: FloatingActionButton(
+          backgroundColor: Colors.red,
+          onPressed: () => _showForm(null),
+          // ignore: sort_child_properties_last
+          child: const Icon(
+            Icons.add,
+            size: 32,
+          ),
         ),
       ),
     );
@@ -393,6 +381,23 @@ class _HomePageState extends State<HomePage> {
 
   Future getData(urunNo) async {
     await ApiService().deleteUrun(urunNo);
+    _urunModel = (await ApiService().getUrunler())!;
+    setState(() {
+      _urunModel = _urunModel;
+    });
+  }
+
+  Future addUrun(marka, urunAd, barkod, stok) async {
+    await ApiService().addUrun(marka, urunAd, barkod, stok);
+    _urunModel = (await ApiService().getUrunler())!;
+    setState(() {
+      _urunModel = _urunModel;
+    });
+  }
+
+  Future satUrun(barkod, satis, int stok) async {
+    print(barkod + satis.toString() + stok.toString());
+    await ApiService().sellUrun(barkod, satis, stok);
     _urunModel = (await ApiService().getUrunler())!;
     setState(() {
       _urunModel = _urunModel;
